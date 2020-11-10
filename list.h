@@ -9,51 +9,41 @@
 #ifndef list_h
 #define list_h
 
-typedef void  (*list_free_item)(void*);
-typedef void  (*list_print_item)(void*);
-typedef void* (*list_allocate_item)(const void*);
-typedef int   (*list_compare_item)(const void*, const void*);
+#include "util.h"
 
-
-typedef struct {
-    list_allocate_item allocater;
-    list_free_item free_item;
-    list_print_item print_item;
-    list_compare_item compare;
-} list_item_functions;
-
-typedef struct list_item {
-    struct list_item* next;
-    struct list_item* prev;
+typedef struct cgs_list_item {
+    struct cgs_list_item* next;
+    struct cgs_list_item* prev;
     void *data;
-}list_item;
+}cgs_list_item;
 
-typedef struct List {
+typedef struct cgsList {
     int size;
-    list_item* head;
-    list_item* tail;
-    void  (*delete_list)(struct List* self);
+    cgs_list_item* head;
+    cgs_list_item* tail;
+    void  (*delete_list)(struct cgsList* self);
 
-    void (*insert_front)(struct List* self, const void* n);
-    void (*insert_at)(struct List* self, const void* n, const int i);
-    void (*insert_priority)(struct List* self, const void* n);
-    void (*insert_back)(struct List* self, const void* n);
+    void (*insert_front)(struct cgsList* self, const void* n);
+    void (*insert_at)(struct cgsList* self, const void* n, const int i);
+    void (*insert_priority)(struct cgsList* self, const void* n);
+    void (*insert_back)(struct cgsList* self, const void* n);
 
-    void (*remove_front)(struct List* self);
-    void (*remove_back)(struct List* self);
-    void (*print)(struct List* self);
+    void (*remove_front)(struct cgsList* self);
+    void (*remove_back)(struct cgsList* self);
 
-    int   (*empty)(struct List* self);
-    void* (*front)(struct List* self);
-    void* (*back)(struct List* self);
+    int   (*empty)(struct cgsList* self);
+    void* (*front)(struct cgsList* self);
+    void* (*back)(struct cgsList* self);
+    void* (*at)(struct cgsList* self, const int i);
 
-    list_allocate_item allocate;
-    list_free_item     free_item;
-    list_print_item    print_item;
-    list_compare_item  compare;
-}List;
 
-list_item_functions LST_STORE;
-List* list_create(list_item_functions*);
+    cgs_allocate_item allocate;
+    cgs_free_item     free_item;
+    cgs_print_item    print_item;
+    cgs_compare_key  compare;
+}cgsList;
+
+cgs_item_functions CGS_LST_STORE;
+cgsList* list_create(cgs_item_functions*);
 
 #endif /* list_h */

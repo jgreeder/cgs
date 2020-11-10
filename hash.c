@@ -20,38 +20,37 @@
 #define HT_RESIZE_UP_PERCENT   0.75
 #define HT_RESIZE_DOWN_PERCENT 0.10
 
-static h_item HT_DELETED_ITEM = {NULL, NULL};
+static cgs_h_item HT_DELETED_ITEM = {NULL, NULL};
 
 // helper functions for hash table
-static h_item* new_item(const char* k, const void* v, ht_allocate_item);
-static void del_item(h_item* item, ht_free_item);
+static cgs_h_item* new_item(const char* k, const void* v, cgs_allocate_item);
+static void del_item(cgs_h_item* item, cgs_free_item);
 static int ht_hash    (const char* s, const int a, const int m);
 static int ht_get_hash(const char* s, const int m, const int t);
-static void ht_resize(HashTable* ht, int new_size);
+static void ht_resize(cgsHashTable* ht, int new_size);
 
 // Main functions
-static void   ht_delete_table(HashTable* self);
-static void   ht_insert(HashTable* self, const char* k, const void* v);
-static void   ht_update(HashTable* self, const char* k, const void* v);
-static void   ht_delete(HashTable* self, const char* k);
-static int    ht_count(HashTable* self, const char* k);
-static void*  ht_find(HashTable* self, const char* k);
+static void   ht_delete_table(cgsHashTable* self);
+static void   ht_insert(cgsHashTable* self, const char* k, const void* v);
+static void   ht_update(cgsHashTable* self, const char* k, const void* v);
+static void   ht_delete(cgsHashTable* self, const char* k);
+static int    ht_count(cgsHashTable* self, const char* k);
+static void*  ht_find(cgsHashTable* self, const char* k);
 
 // For use when Hashtable itself is value
 static void* ht_allocater(const void*);
 static void ht_free(void *);
-static void ht_print_open(void* self);
-ht_item_functions HT_STORE = {ht_allocater, ht_free, ht_print_open};
+cgs_item_functions HT_STORE = {ht_allocater, ht_free};
 
 
-static h_item* new_item(const char* k, const void* v, ht_allocate_item allocate_item) {
-    h_item* n = malloc(sizeof(h_item));
+static cgs_h_item* new_item(const char* k, const void* v, cgs_allocate_item allocate_item) {
+    cgs_h_item* n = malloc(sizeof(cgs_h_item));
     n->key = strdup(k);
     n->value = allocate_item(v);;
     return n;
 }
 
-static void del_item(h_item* item, ht_free_item free_item) {
+static void del_item(cgs_h_item* item, cgs_free_item free_item) {
     free(item->key);
     free_item(item->value);
     free(item);
@@ -73,9 +72,9 @@ static int ht_get_hash(const char* s, const int m, const int t) {
     return (hash_a + (t * (hash_b + 1))) % m;
 }
 
-static void ht_delete_table(HashTable* self) {
+static void ht_delete_table(cgsHashTable* self) {
     for (int i=0; i < self->size; i++) {
-        h_item* item = self->table[i];
+        cgs_h_item* item = self->table[i];
         if(item != NULL && item != &HT_DELETED_ITEM) del_item(item, self->free_item);
         else if (item != &HT_DELETED_ITEM) free(item);
     }
@@ -103,20 +102,20 @@ static int next_prime(int x) {
     return x;
 }
 
-static void ht_resize(HashTable* ht, int new_size) {
+static void ht_resize(cgsHashTable* ht, int new_size) {
     if (new_size < HT_DEFAULT_SIZE) {
         return;
     }
 
     int prime = next_prime(new_size);
 
-    h_item** new_table = calloc((size_t)prime, sizeof(h_item*));
+    cgs_h_item** new_table = calloc((size_t)prime, sizeof(cgs_h_item*));
     for (int i = 0; i < ht->size; i++) {
-        h_item* old = ht->table[i];
+        cgs_h_item* old = ht->table[i];
 
         if (old && old != &HT_DELETED_ITEM){
             int hash = ht_get_hash(old->key, prime, 0);
-            h_item* new_curr = new_table[hash];
+            cgs_h_item* new_curr = new_table[hash];
             int try = 1;
             while (new_curr != NULL) {
                 hash = ht_get_hash(old->key, prime, try);
@@ -135,7 +134,7 @@ static void ht_resize(HashTable* ht, int new_size) {
     ht->table = new_table;
 }
 
-static void ht_insert(HashTable* self, const char* k, const void* v) {
+static void ht_insert(cgsHashTable* self, const char* k, const void* v) {
     if (self->count(self, k)) {
         self->update(self, k, v);
         return;
@@ -146,7 +145,7 @@ static void ht_insert(HashTable* self, const char* k, const void* v) {
 
     int hash = ht_get_hash(k, self->size, 0);
 
-    h_item* curr = self->table[hash];
+    cgs_h_item* curr = self->table[hash];
     int try = 1;
     while (curr != NULL && curr != &HT_DELETED_ITEM) {
         hash = ht_get_hash(k, self->size, try);
@@ -158,10 +157,10 @@ static void ht_insert(HashTable* self, const char* k, const void* v) {
     self->_count++;
 }
 
-static void ht_delete(HashTable* self, const char* k) {
+static void ht_delete(cgsHashTable* self, const char* k) {
     int hash = ht_get_hash(k, self->size, 0);
 
-    h_item* curr = self->table[hash];
+    cgs_h_item* curr = self->table[hash];
     int try = 1;
     while (curr != NULL){
         if (curr != &HT_DELETED_ITEM) {
@@ -181,10 +180,10 @@ static void ht_delete(HashTable* self, const char* k) {
          ht_resize(self, (int)self->size/HT_RESIZE_RATIO);
 }
 
-static void*  ht_find(HashTable* self, const char* k) {
+static void* ht_find(cgsHashTable* self, const char* k) {
     int hash = ht_get_hash(k, self->size, 0);
 
-    h_item* curr = self->table[hash];
+    cgs_h_item* curr = self->table[hash];
     int try = 1;
     while (curr != NULL && curr != &HT_DELETED_ITEM && strcmp(curr->key, k) != 0) {
 
@@ -198,10 +197,10 @@ static void*  ht_find(HashTable* self, const char* k) {
         return NULL;
 }
 
-static int ht_count(HashTable* self, const char* k) {
+static int ht_count(cgsHashTable* self, const char* k) {
     int hash = ht_get_hash(k, self->size, 0);
 
-    h_item* curr = self->table[hash];
+    cgs_h_item* curr = self->table[hash];
     int try = 1;
     while (curr != NULL && curr != &HT_DELETED_ITEM && strcmp(curr->key, k) != 0) {
         hash = ht_get_hash(k, self->size, try);
@@ -213,12 +212,12 @@ static int ht_count(HashTable* self, const char* k) {
     return 0;
 }
 
-static void ht_update(HashTable* self, const char* k, const void* v) {
+static void ht_update(cgsHashTable* self, const char* k, const void* v) {
     int hash = ht_get_hash(k, self->size, 0);
 
     if (!self->count(self, k)) return;
 
-    h_item* curr = self->table[hash];
+    cgs_h_item* curr = self->table[hash];
     int try = 1;
     while (curr != NULL && curr != &HT_DELETED_ITEM && strcmp(curr->key, k) != 0) {
 
@@ -233,17 +232,9 @@ static void ht_update(HashTable* self, const char* k, const void* v) {
 
 }
 
-static void ht_print(HashTable* self) {
-    for (int i = 0; i < self->size; i++) {
-        if (!self->table[i]) continue;
-        printf("Key: %s\t", self->table[i]->key);
-        self->print_item(self->table[i]->value);
-    }
-}
+cgsHashTable* ht_create(cgs_item_functions* f) {
 
-HashTable* ht_create(ht_item_functions* f) {
-
-    HashTable* ht = malloc(sizeof(HashTable));
+    cgsHashTable* ht = malloc(sizeof(cgsHashTable));
 
     // init memember vars
     ht->_count = 0;
@@ -256,33 +247,21 @@ HashTable* ht_create(ht_item_functions* f) {
     ht->insert = ht_insert;
     ht->update = ht_update;
     ht->delete_table = ht_delete_table;
-    ht->allocate_item = f->allocater;
+    ht->allocate_item = f->item_allocater;
     ht->free_item = f->free_item;
-    ht->print_item = f->print_item;
-    ht->print = ht_print;
-
 
     // init the table
-    ht->table = calloc((size_t)ht->size, sizeof(h_item*));
+    ht->table = calloc((size_t)ht->size, sizeof(cgs_h_item*));
 
     return ht;
 }
 
 
 static void* ht_allocater(const void* ht) {
-    const ht_item_functions* f = ht;
-    return ht_create(&(ht_item_functions){f->allocater, f->free_item, f->print_item});
+    const cgs_item_functions* f = ht;
+    return ht_create(&(cgs_item_functions){f->item_allocater, f->free_item});
 }
 
 static void ht_free(void * ht) {
     ht_delete_table(ht);
-}
-
-static void ht_print_open(void* t) {
-    HashTable* self = t;
-    for (int i = 0; i < self->size; i++) {
-        if (!self->table[i]) continue;
-        printf("Key: %s\t", self->table[i]->key);
-        self->print_item(self->table[i]->value);
-    }
 }

@@ -9,39 +9,26 @@
 #ifndef queue_h
 #define queue_h
 
-typedef void  (*queue_enqueue_call)(void* self, const void*);
-typedef void  (*queue_dequeue_call)(void* self);
-typedef int   (*queue_empty_call)(void* self);
-typedef void* (*queue_front_call)(void* self);
-typedef void  (*queue_free_call)(void* self);
+#include "util.h"
 
-
-typedef struct {
-    queue_enqueue_call enqueue;
-    queue_dequeue_call  dequeue;
-    queue_empty_call empty;
-    queue_front_call front;
-    queue_free_call delete_storage;
-}queue_function_calls;
-
-typedef struct Queue {
+typedef struct cgsQueue {
     void* storage;
     
-    void  (*delete_queue) (struct Queue*);
-    void  (*enqueue) (struct Queue* self, const void* d);
-    void  (*dequeue)  (struct Queue* self);
-    int   (*empty)(struct Queue* self);
-    void* (*front)  (struct Queue* self);
+    void  (*delete_queue) (struct cgsQueue* self);
+    void  (*enqueue) (struct cgsQueue* self, const void* d);
+    void  (*dequeue)  (struct cgsQueue* self);
+    int   (*empty)(struct cgsQueue* self);
+    void* (*front)  (struct cgsQueue* self);
     
-    queue_enqueue_call s_enqueue;
-    queue_dequeue_call  s_dequeue;
-    queue_empty_call s_empty;
-    queue_front_call  s_front;
-    queue_free_call s_free;
+    cgs_insert_call s_enqueue;
+    cgs_remove_call  s_dequeue;
+    cgs_empty_call s_empty;
+    cgs_front_call  s_front;
+    cgs_free_call s_free;
 
-}Queue;
+}cgsQueue;
 
-Queue* queue_create(void*, queue_function_calls*);
+cgsQueue* queue_create(void*, cgs_function_calls*);
 
 
 #endif /* queue_h */

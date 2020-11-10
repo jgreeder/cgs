@@ -9,48 +9,37 @@
 #ifndef hash_h
 #define hash_h
 
-typedef void* (*ht_allocate_item)(const void*);
-typedef void  (*ht_free_item)(void*);
-typedef void  (*ht_print_item)(void*);
-
-typedef struct {
-    ht_allocate_item allocater;
-    ht_free_item free_item;
-    ht_print_item print_item;
-} ht_item_functions;
+#include "util.h"
 
 typedef struct {
     char* key;
     void* value;
-}h_item;
+}cgs_h_item;
 
 
-typedef struct HashTable{
+typedef struct cgsHashTable{
     unsigned int size;
     unsigned int _count;
-    h_item** table;
+    cgs_h_item** table;
 
     // Delete table
-    void  (*delete_table)(struct HashTable* self);
+    void  (*delete_table)(struct cgsHashTable* self);
 
     // Main functions
-    void  (*insert)(struct HashTable* self, const char* k, const void* v);
-    void  (*update)(struct HashTable* self, const char* k, const void* v);
-    void  (*remove)(struct HashTable* self, const char* k);
-    void* (*find)  (struct HashTable* self, const char* k);
-    int   (*count) (struct HashTable* self, const char* k);
-    void  (*print) (struct HashTable* self);
+    void  (*insert)(struct cgsHashTable* self, const char* k, const void* v);
+    void  (*update)(struct cgsHashTable* self, const char* k, const void* v);
+    void  (*remove)(struct cgsHashTable* self, const char* k);
+    void* (*find)  (struct cgsHashTable* self, const char* k);
+    int   (*count) (struct cgsHashTable* self, const char* k);
 
     // Allow for generic values to be stored
-    ht_allocate_item allocate_item;
-    ht_free_item free_item;
-    ht_print_item print_item;
-
-} HashTable;
+    cgs_allocate_item allocate_item;
+    cgs_free_item free_item;
+} cgsHashTable;
 
 // For use when Hashtable itself is value
-ht_item_functions HT_STORE;
+cgs_item_functions HT_STORE;
 // Init the hash table
-HashTable* ht_create(ht_item_functions*);
+cgsHashTable* ht_create(cgs_item_functions*);
 
 #endif /* hash_h */

@@ -10,21 +10,21 @@
 
 #include "bst.h"
 
-void fix_size(tree_node *T)
+void fix_size(cgs_tree_node *T)
 {
   T->size = 1;
   if (T->left) T->size += T->left->size;
   if (T->right) T->size += T->right->size;
 }
 
-static void free_node(tree_node* t, bst_free_item i_f, bst_free_item k_f) {
+static void free_node(cgs_tree_node* t, cgs_free_item i_f, cgs_free_item k_f) {
     if (!t) return;
     i_f(t->data);
     k_f(t->key);
     free(t);
 }
 
-static void recursive_delete_node(tree_node* t, bst_free_item i_f, bst_free_item k_f) {
+static void recursive_delete_node(cgs_tree_node* t, cgs_free_item i_f, cgs_free_item k_f) {
     if (!t) return;
     recursive_delete_node(t->left, i_f, k_f);
     recursive_delete_node(t->right, i_f, k_f);
@@ -32,7 +32,7 @@ static void recursive_delete_node(tree_node* t, bst_free_item i_f, bst_free_item
     t = NULL;
 }
 
-void split(tree_node *t, void* k, tree_node **l, tree_node **r, bst_compare_key compare)
+void split(cgs_tree_node *t, void* k, cgs_tree_node **l, cgs_tree_node **r, cgs_compare_key compare)
 {
   if (t == NULL) {
     *l = NULL;
@@ -49,7 +49,7 @@ void split(tree_node *t, void* k, tree_node **l, tree_node **r, bst_compare_key 
   fix_size(t);
 }
 
-static tree_node* insert_node(tree_node* t, tree_node* to_insert, bst_compare_key compare) {
+static cgs_tree_node* insert_node(cgs_tree_node* t, cgs_tree_node* to_insert, cgs_compare_key compare) {
     if (!t) {
         t = to_insert;
         return t;
@@ -67,7 +67,7 @@ static tree_node* insert_node(tree_node* t, tree_node* to_insert, bst_compare_ke
     return t;
 }
 
-static tree_node* join_node(tree_node* l, tree_node* r, bst_compare_key compare) {
+static cgs_tree_node* join_node(cgs_tree_node* l, cgs_tree_node* r, cgs_compare_key compare) {
     if (l == NULL) return r;
     if (r == NULL) return l;
     int random = rand() % (l->size + r->size);
@@ -86,7 +86,7 @@ static tree_node* join_node(tree_node* l, tree_node* r, bst_compare_key compare)
 }
 
 
-static tree_node* remove_node(tree_node* t, const void* k, bst_compare_key compare, bst_free_item i_f, bst_free_item k_f) {
+static cgs_tree_node* remove_node(cgs_tree_node* t, const void* k, cgs_compare_key compare, cgs_free_item i_f, cgs_free_item k_f) {
     if (!t) return NULL;
     int c = compare(k, t->key);
     if (c < 0){
@@ -94,7 +94,7 @@ static tree_node* remove_node(tree_node* t, const void* k, bst_compare_key compa
     } else if (c > 0) {
         t->right = remove_node(t->right, k, compare, i_f, k_f);
     } else {
-        tree_node* temp = t;
+        cgs_tree_node* temp = t;
         t = join_node(t->left, t->right, compare);
         free_node(temp, i_f, k_f);
         return t;
@@ -103,7 +103,7 @@ static tree_node* remove_node(tree_node* t, const void* k, bst_compare_key compa
     return t;
 }
 
-static tree_node* find_node(tree_node* t, const void* k, bst_compare_key compare) {
+static cgs_tree_node* find_node(cgs_tree_node* t, const void* k, cgs_compare_key compare) {
     if (!t) return NULL;
     int c = compare(k, t->key);
     if (c < 0){
@@ -116,8 +116,8 @@ static tree_node* find_node(tree_node* t, const void* k, bst_compare_key compare
 }
 
 
-static void bst_insert(BST* self, const void* k, const void* d) {
-    tree_node* new_node = malloc(sizeof(tree_node));
+static void bst_insert(cgsBST* self, const void* k, const void* d) {
+    cgs_tree_node* new_node = malloc(sizeof(cgs_tree_node));
     new_node->left = NULL;
     new_node->right = NULL;
     new_node->size = 1;
@@ -129,16 +129,16 @@ static void bst_insert(BST* self, const void* k, const void* d) {
     self->size = self->root->size;
 }
 
-static void bst_remove(BST* self, const void* k) {
+static void bst_remove(cgsBST* self, const void* k) {
     if (!self->find(self, k)) return;
     
     self->root = remove_node(self->root, k, self->compare, self->free_item, self->free_key);
     self->size--;
 }
 
-static void* bst_find(BST* self, const void* k) {
+static void* bst_find(cgsBST* self, const void* k) {
     if (self->size == 0) return NULL;
-    tree_node* found = find_node(self->root, k, self->compare);
+    cgs_tree_node* found = find_node(self->root, k, self->compare);
     if (found)
         return found->data;
     else
@@ -146,18 +146,18 @@ static void* bst_find(BST* self, const void* k) {
 }
 
 
-static int bst_empty(BST* self) {
+static int bst_empty(cgsBST* self) {
     return (self->size == 0);
 }
 
-static void bst_delete(BST* self)  {
+static void bst_delete(cgsBST* self)  {
     recursive_delete_node(self->root, self->free_item, self->free_key);
     free(self);
     self = NULL;
 }
 
-BST* bst_create(bst_item_functions* f) {
-    BST* b = malloc(sizeof(BST));
+cgsBST* bst_create(cgs_item_functions* f) {
+    cgsBST* b = malloc(sizeof(cgsBST));
     
     b->root = NULL;
     b->size = 0;
@@ -172,7 +172,6 @@ BST* bst_create(bst_item_functions* f) {
     b->key_allocater = f->key_allocater;
     b->free_item = f->free_item;
     b->free_key = f->free_key;
-    b->print_item = f->print_item;
     b->compare = f->compare;
     
     return b;
