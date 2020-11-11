@@ -66,7 +66,7 @@ To store nesting Lists use the predefined variable `CGS_LST_STORE`. This contain
 function pointers to give to the `cgs_list_create` function. (A default comparator is given that compares
 list sizes. Feel free to change).
 
-###Example
+### Example
 	cgsList list = cgs_list_create(&(cgs_item_functions){<item_allocater>, <free_item>, <compare>})
 	list->insert_front(list, <pointer/address to item>
 
